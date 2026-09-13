@@ -1,0 +1,10 @@
+DS_Store
+*.pyc
+__pycache__
+.env
+*.db
+.venv
+*.png
+.vscode/
+python-practice/
+app.log
