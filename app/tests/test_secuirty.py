@@ -1,6 +1,15 @@
 import pytest
+from jose import jwt
 
 from app import security
+from app.config import config
+
+
+def test_create_acces_token():
+    token = security.create_Access_token("123")
+    assert {"sub": "123"}.items() <= jwt.decode(
+        token, key=config.JWT_SECRET, algorithms=[security.ALGORITHM]
+    ).items()
 
 
 def test_password_hashes():
