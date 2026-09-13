@@ -4,7 +4,12 @@ from fastapi import APIRouter, HTTPException
 
 from app.database import database, user_table
 from app.models.user import UserIn
-from app.security import get_password_hash, get_user_by_email
+from app.security import (
+    authenticate_user,
+    create_Access_token,
+    get_password_hash,
+    get_user_by_email,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -26,10 +31,8 @@ async def register(user: UserIn):
     return {"detail": "user created"}
 
 
-@router.post("/login", status_code=200)
+@router.post("/login")
 async def login(user: UserIn):
-    if not await get_user_by_email(user.email):
-        raise HTTPException(
-            status_code=401,
-            detail="Wrong email or password",
-        )
+    user = await authenticate_user(user.email, user.password)
+    access_token = create_Access_token(user.email)
+    return {"access_token": access_token, "token_type": "bearer"}
