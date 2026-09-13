@@ -1,13 +1,32 @@
+import datetime
 import logging
 
+from jose import jwt
 from passlib.context import CryptContext
 
+from app.config import config
 from app.database import database, user_table
 
 logger = logging.getLogger(__name__)
 
+ALGORITHM = "HS256"
 # defining the hashing algorithm
 pwd_context = CryptContext(schemes=["bcrypt"])
+
+
+# for testing
+def access_token_expire_minutes() -> int:
+    return 30
+
+
+def create_Access_token(email: str):
+    logger.debug("Creating access token", extra={"email": email})
+    expire = datetime.datetime.now(datetime.utc) + datetime.timedelta(
+        minutes=access_token_expire_minutes()
+    )
+    jwt_data = {"sub": email, "exp": expire}
+    encoded_jwt = jwt.encode(jwt_data, key=config.JWT_SECRET, algorithm=ALGORITHM)
+    return encoded_jwt
 
 
 def get_password_hash(password: str) -> str:
