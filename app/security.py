@@ -57,7 +57,7 @@ async def get_user_by_email(email: str):
 
 async def authenticate_user(email: str, password: str):
     logger.debug("Authenticating user", extra={"email": email})
-    user = get_user_by_email(email)
+    user = await get_user_by_email(email)
     if not user:
         raise credentials_exception
     if not verify_password(password, user.password):
