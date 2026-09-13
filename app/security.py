@@ -1,6 +1,7 @@
 import datetime
 import logging
 
+from fastapi import HTTPException
 from jose import jwt
 from passlib.context import CryptContext
 
@@ -12,6 +13,11 @@ logger = logging.getLogger(__name__)
 ALGORITHM = "HS256"
 # defining the hashing algorithm
 pwd_context = CryptContext(schemes=["bcrypt"])
+
+
+credentials_exception = HTTPException(
+    status_code=401, detail="Could not validate credentials"
+)
 
 
 # for testing
@@ -47,3 +53,13 @@ async def get_user_by_email(email: str):
     result = await database.fetch_one(query)
     if result:
         return result
+
+
+async def authenticate_user(email: str, password: str):
+    logger.debug("Authenticating user", extra={"email": email})
+    user = get_user_by_email(email)
+    if not user:
+        raise credentials_exception
+    if not verify_password(password, user.password):
+        raise credentials_exception
+    return user
