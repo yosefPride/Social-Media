@@ -59,7 +59,7 @@ async def create_comment(comment: CommentIn, request: Request):
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    data = comment.dict()
+    data = comment.model_dump()
     query = comment_table.insert().values(data)
 
     logger.info("Creating a comment")
