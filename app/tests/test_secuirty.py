@@ -6,8 +6,15 @@ from app.config import config
 
 
 def test_create_acces_token():
-    token = security.create_Access_token("123")
-    assert {"sub": "123"}.items() <= jwt.decode(
+    token = security.create_access_token("123")
+    assert {"sub": "123", "type": "access"}.items() <= jwt.decode(
+        token, key=config.JWT_SECRET, algorithms=[security.ALGORITHM]
+    ).items()
+
+
+def test_create_confirmation_token():
+    token = security.create_confirmation_token("123")
+    assert {"sub": "123", "type": "confirmation"}.items() <= jwt.decode(
         token, key=config.JWT_SECRET, algorithms=[security.ALGORITHM]
     ).items()
 
@@ -53,7 +60,7 @@ async def test_authenticate_user_wrong_password(registered_user: dict):
 
 @pytest.mark.anyio
 async def test_get_current_user(registered_user: dict):
-    token = security.create_Access_token(registered_user["email"])
+    token = security.create_access_token(registered_user["email"])
     user = await security.get_current_user(token=token)
     assert user.email == registered_user["email"]
 
@@ -62,3 +69,11 @@ async def test_get_current_user(registered_user: dict):
 async def test_get_current_user_invalid_token():
     with pytest.raises(security.HTTPException):
         await security.get_current_user("invalid token")
+
+
+@pytest.mark.anyio
+async def test_get_current_user_wrong_type_token(registered_user: dict):
+    token = security.create_confirmation_token(registered_user["email"])
+
+    with pytest.raises(security.HTTPException):
+        await security.get_current_user(token)
