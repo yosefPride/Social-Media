@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from app.database import comment_table, database, post_table
 from app.models.post import (
@@ -10,6 +10,8 @@ from app.models.post import (
     UserPostIn,
     UserPostWithComments,
 )
+from app.models.user import User
+from app.security import Oauth2_scheme, get_current_user
 
 router = APIRouter()
 
@@ -26,7 +28,9 @@ async def find_post_by_id(post_id: int):
 
 
 @router.post("/posts", response_model=UserPost, status_code=201)
-async def create_post(post: UserPostIn):
+async def create_post(post: UserPostIn, request: Request):
+    current_user: User = await get_current_user(await Oauth2_scheme(request))  # noqa
+
     data = post.model_dump()
     query = post_table.insert().values(data)
 
@@ -48,7 +52,9 @@ async def get_all_posts():
 
 
 @router.post("/comments", response_model=Comment, status_code=201)
-async def create_comment(comment: CommentIn):
+async def create_comment(comment: CommentIn, request: Request):
+    current_user: User = await get_current_user(await Oauth2_scheme(request))  # noqa
+
     post = await find_post_by_id(comment.post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
