@@ -89,7 +89,7 @@ async def test_create_post_expired_token(
     async_client: AsyncClient, registered_user: dict, mocker
 ):
     mocker.patch("app.security.access_token_expire_minutes", return_value=-1)
-    token = security.create_Access_token(registered_user["email"])
+    token = security.create_access_token(registered_user["email"])
     response = await async_client.post(
         "/posts",
         json={"body": "Test post"},

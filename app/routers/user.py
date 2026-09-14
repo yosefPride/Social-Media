@@ -6,7 +6,7 @@ from app.database import database, user_table
 from app.models.user import UserIn
 from app.security import (
     authenticate_user,
-    create_Access_token,
+    create_access_token,
     get_password_hash,
     get_user_by_email,
 )
@@ -34,5 +34,5 @@ async def register(user: UserIn):
 @router.post("/login")
 async def login(user: UserIn):
     user = await authenticate_user(user.email, user.password)
-    access_token = create_Access_token(user.email)
+    access_token = create_access_token(user.email)
     return {"access_token": access_token, "token_type": "bearer"}
