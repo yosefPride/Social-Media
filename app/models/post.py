@@ -13,6 +13,12 @@ class UserPost(UserPostIn):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserPostWithLikes(UserPost):
+    likes: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class CommentIn(BaseModel):
     body: str
     post_id: int
@@ -26,7 +32,7 @@ class Comment(CommentIn):
 
 
 class UserPostWithComments(BaseModel):
-    post: UserPost
+    post: UserPostWithLikes
     comments: list[Comment] = []
 
 

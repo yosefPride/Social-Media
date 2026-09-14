@@ -1,6 +1,7 @@
 import logging
 from typing import Annotated
 
+import sqlalchemy
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.database import comment_table, database, like_table, post_table
@@ -19,6 +20,12 @@ from app.security import get_current_user
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
+
+select_post_and_likes = (
+    sqlalchemy.select(post_table, sqlalchemy.func.count(like_table.c.id).label("likes"))
+    .select_from(post_table.outerjoin(like_table))
+    .group_by(post_table.c.id)
+)
 
 
 async def find_post_by_id(post_id: int):
@@ -84,9 +91,12 @@ async def get_all_comments(post_id: int):
 
 @router.get("/posts/{post_id}", response_model=UserPostWithComments)
 async def get_post_with_comments(post_id: int):
-    logger.info("Getting a post with comments")
+    query = select_post_and_likes.where(post_table.c.id == post_id)
 
-    post = await find_post_by_id(post_id)
+    logger.info("Getting a post with comments")
+    logger.debug(query)
+
+    post = await database.fetch_one(query)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     return {
