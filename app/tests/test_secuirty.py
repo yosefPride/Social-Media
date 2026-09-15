@@ -19,6 +19,54 @@ def test_create_confirmation_token():
     ).items()
 
 
+def test_get_subject_for_token_type_valid_confirmation():
+    email = "test@example.net"
+    token = security.create_confirmation_token(email)
+    assert email == security.get_subject_for_token_type(token, "confirmation")
+
+
+def test_get_subject_for_token_type_valid_access():
+    email = "test@example.net"
+    token = security.create_access_token(email)
+    assert email == security.get_subject_for_token_type(token, "access")
+
+
+def test_get_subject_for_token_type_valid_expired(mocker):
+    mocker.patch("app.security.access_token_expire_minutes", return_value=-1)
+    email = "test@example.net"
+    token = security.create_access_token(email)
+    with pytest.raises(security.HTTPException) as exc_info:
+        security.get_subject_for_token_type(token, "access")
+    assert "Token has expired" == exc_info.value.detail
+
+
+def test_get_subject_for_token_type_invalid_token():
+    token = "invalid token"
+    with pytest.raises(security.HTTPException) as exc_info:
+        security.get_subject_for_token_type(token, "access")
+    assert "Invalid token" == exc_info.value.detail
+
+
+def test_subject_for_token_type_missing_sub():
+    email = "test@example.net"
+    token = security.create_access_token(email)
+    payload = jwt.decode(token, key=config.JWT_SECRET, algorithms=[security.ALGORITHM])
+    del payload["sub"]
+    token = jwt.encode(payload, key=config.JWT_SECRET, algorithm=security.ALGORITHM)
+
+    with pytest.raises(security.HTTPException) as exc_info:
+        security.get_subject_for_token_type(token, "access")
+    assert "Token is missing 'sub' field" == exc_info.value.detail
+
+
+def test_subject_for_token_type_wrong_type():
+    email = "test@example.net"
+    token = security.create_confirmation_token(email)
+    with pytest.raises(security.HTTPException) as exc_info:
+        security.get_subject_for_token_type(token, "access")
+    assert "Token has incorrect type, expected 'access'" == exc_info.value.detail
+
+
 def test_password_hashes():
     password = "password"
     assert security.verify_password(password, security.get_password_hash(password))
