@@ -1,9 +1,10 @@
 import os
 from collections.abc import AsyncGenerator, Generator
+from unittest.mock import AsyncMock, Mock
 
-import httpx
 import pytest
 from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient, Request, Response
 
 os.environ["ENV_STATE"] = "test"
 
@@ -30,9 +31,9 @@ async def db(anyio_backend) -> AsyncGenerator:
 
 @pytest.fixture()
 async def async_client(client) -> AsyncGenerator:
-    transport = httpx.ASGITransport(app=app)
+    transport = ASGITransport(app=app)
 
-    async with httpx.AsyncClient(
+    async with AsyncClient(
         transport=transport,
         base_url=client.base_url,
     ) as ac:
@@ -40,7 +41,7 @@ async def async_client(client) -> AsyncGenerator:
 
 
 @pytest.fixture()
-async def registered_user(async_client: httpx.AsyncClient) -> dict:
+async def registered_user(async_client: AsyncClient) -> dict:
     user_details = {"email": "test@example.net", "password": "1234"}
     await async_client.post("register", json=user_details)
     query = user_table.select().where(user_table.c.email == user_details["email"])
@@ -61,6 +62,18 @@ async def confirmed_user(registered_user: dict) -> dict:
 
 
 @pytest.fixture()
-async def logged_in_token(async_client: httpx.AsyncClient, confirmed_user: dict) -> str:
+async def logged_in_token(async_client: AsyncClient, confirmed_user: dict) -> str:
     response = await async_client.post("/login", json=confirmed_user)
     return response.json()["access_token"]
+
+
+@pytest.fixture(autouse=True)
+def mock_httpx_client(mocker):
+    mocked_client = mocker.patch("app.tasks.httpx.AsyncClient")
+
+    mocked_async_client = Mock()
+    response = Response(status_code=200, content="", request=Request("POST", "//"))
+    mocked_async_client.post = AsyncMock(return_value=response)
+    mocked_client.return_value.__aenter__.return_value = mocked_async_client
+
+    return mocked_async_client
