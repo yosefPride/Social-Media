@@ -17,6 +17,8 @@ class GlobalConfig(BaseConfig):
     DB_FORCE_ROLL_BACK: bool = False
     LOGTAIL_API_KEY: str | None = None
     JWT_SECRET: str | None = None
+    MAILGUN_DOMAIN: str | None = None
+    MAILGUN_API_KEY: str | None = None
 
 
 class DevConfig(GlobalConfig):
