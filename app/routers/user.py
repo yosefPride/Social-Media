@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request
 
+from app import tasks
 from app.database import database, user_table
 from app.models.user import UserIn
 from app.security import (
@@ -30,12 +31,13 @@ async def register(user: UserIn, request: Request):
     logger.debug(query)
 
     await database.execute(query)
-    return {
-        "detail": "user created. Please confirm your email.",
-        "confirmation_url": request.url_for(
+    await tasks.send_user_registration_email(
+        user.email,
+        confirmation_url=request.url_for(
             "confirm_email", token=create_confirmation_token(user.email)
         ),
-    }
+    )
+    return {"detail": "user created. Please confirm your email."}
 
 
 @router.post("/login")
