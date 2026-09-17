@@ -10,6 +10,7 @@ os.environ["ENV_STATE"] = "test"
 
 from app.database import database, user_table
 from app.main import app
+from app.tests.helpers import create_post
 
 
 @pytest.fixture(scope="session")
@@ -25,7 +26,7 @@ def client() -> Generator:
 @pytest.fixture(autouse=True)
 async def db(anyio_backend) -> AsyncGenerator:
     await database.connect()
-    yield
+    yield database
     await database.disconnect()
 
 
@@ -65,6 +66,11 @@ async def confirmed_user(registered_user: dict) -> dict:
 async def logged_in_token(async_client: AsyncClient, confirmed_user: dict) -> str:
     response = await async_client.post("/login", json=confirmed_user)
     return response.json()["access_token"]
+
+
+@pytest.fixture()
+async def created_post(async_client: AsyncClient, logged_in_token: str):
+    return await create_post("Test post", async_client, logged_in_token)
 
 
 @pytest.fixture(autouse=True)
