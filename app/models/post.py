@@ -8,6 +8,7 @@ class UserPostIn(BaseModel):
 class UserPost(UserPostIn):
     id: int
     user_id: int
+    image_url: str | None = None
 
     # To allow pydantic to use this as a dictionary.
     model_config = ConfigDict(from_attributes=True)
