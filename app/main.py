@@ -8,6 +8,7 @@ from fastapi.exception_handlers import http_exception_handler
 from app.database import database
 from app.logging_conf import configure_logging
 from app.routers.post import router as post_router
+from app.routers.upload import router as upload_router
 from app.routers.user import router as user_router
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ app.add_middleware(CorrelationIdMiddleware)
 
 app.include_router(post_router)
 app.include_router(user_router)
+app.include_router(upload_router)
 
 
 # will log every http exception that gets raised in the app.

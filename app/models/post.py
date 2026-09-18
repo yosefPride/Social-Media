@@ -7,8 +7,16 @@ class UserPostIn(BaseModel):
 
 class UserPost(UserPostIn):
     id: int
+    user_id: int
+    image_url: str | None = None
 
     # To allow pydantic to use this as a dictionary.
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserPostWithLikes(UserPost):
+    likes: int
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -19,10 +27,20 @@ class CommentIn(BaseModel):
 
 class Comment(CommentIn):
     id: int
+    user_id: int
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class UserPostWithComments(BaseModel):
-    post: UserPost
+    post: UserPostWithLikes
     comments: list[Comment] = []
+
+
+class PostLikeIn(BaseModel):
+    post_id: int
+
+
+class PostLike(PostLikeIn):
+    id: int
+    user_id: int

@@ -16,6 +16,13 @@ class GlobalConfig(BaseConfig):
     DATABASE_URL: str | None = None
     DB_FORCE_ROLL_BACK: bool = False
     LOGTAIL_API_KEY: str | None = None
+    JWT_SECRET: str | None = None
+    MAILGUN_DOMAIN: str | None = None
+    MAILGUN_API_KEY: str | None = None
+    B2_KEY_ID: str | None = None
+    B2_APPLICATION_KEY: str | None = None
+    B2_BUCKET_NAME: str | None = None
+    DEEPAI_API_KEY: str | None = None
 
 
 class DevConfig(GlobalConfig):
@@ -35,6 +42,7 @@ class ProdConfig(GlobalConfig):
 class TestConfig(GlobalConfig):
     DATABASE_URL: str = "sqlite:///test.db"
     DB_FORCE_ROLL_BACK: bool = True
+    JWT_SECRET: str = "test-only-jwt-secret"
 
     model_config = SettingsConfigDict(
         env_file=".env",
